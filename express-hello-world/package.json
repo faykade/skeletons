@@ -1,0 +1,14 @@
+{
+  "name": "express-hello-world",
+  "version": "1.0.0",
+  "description": "A Hello World example for an express server",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Thomas Ulrich",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.14.0"
+  }
+}
