@@ -1,4 +1,8 @@
 # Express Hello World example application
 
 ## To Run
-Simply type 'node app' in a terminal, and navigate to the localhost:3000 and the output will be displayed.
+Simply type the following in a terminal:
+```
+node app
+```
+Then, navigate to localhost:3000 in a browser and the output will be displayed.
