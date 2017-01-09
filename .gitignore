@@ -1,4 +1,8 @@
-node_modules
-target
-build
+node_modules/
+target/
+build/
 *.o
+*.class
+*.cmi
+*.cmo
+exe/

@@ -1,11 +1,14 @@
 # C++ Hello World example application
 
 ## To Run
-To compile, type the following in a terminal:
+To compile, type one of the following in a terminal:
 ```
-g++ main.cpp -o main
+make
+make rebuild
+make all
 ```
 Then, to execute the program, type the following in a terminal:
 ```
-./main
+cd exe
+./HelloWorld
 ```
