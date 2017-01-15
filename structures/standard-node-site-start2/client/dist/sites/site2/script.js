@@ -1,0 +1,1 @@
+var test2=function(){},testing2=function(){};$(function(){console.log("have jquery"),$("body").html("<p>IT WORdjofajepfjapfje</p>")});

@@ -12,12 +12,19 @@ var fs = require('fs');
 var path = require('path');
 var merge = require('merge-stream');
 var gulpif = require('gulp-if');
+var browserSync = require('browser-sync').create();
+var nodemon = require('gulp-nodemon');
 
-const SCSS_DIR = 'styles/**/*.scss';
-const JS_DIR = 'scripts/';
+const CLIENT_ROOT = 'client/';
+const VIEWS_DIR = 'views/';
+const PUBLIC_FILES = ['client/dist', VIEWS_DIR];
+const SERVER_NAME = 'server.js';
+const SERVER_ROOT = 'server/';
+const SCSS_DIR = CLIENT_ROOT + 'styles/**/*.scss';
+const JS_DIR = CLIENT_ROOT + 'scripts/';
 const JS_SUB_DIRS = ['global/', 'sites/'];
-const DEV_DIR = 'dist-dev/';
-const PROD_DIR = 'dist/';
+const DEV_DIR = CLIENT_ROOT + 'dist-dev/';
+const PROD_DIR = CLIENT_ROOT + 'dist/';
 const INCLUDE_PATHS = ['node_modules/foundation-sites/scss'];
 const PREFIXER_VERSIONS = ['last 2 versions', 'ie >= 9', 'and_chr >= 2.3'];
 
@@ -59,13 +66,46 @@ var getFolders = function(dir){
     });
 }
 
+gulp.task
+
+
 gulp.task('help',function(){
 });
 
+gulp.task('browser-sync', ['nodemon'], function(){
+  browserSync.init({
+    proxy: 'localhost:3000',
+    files: [PUBLIC_FILES],
+  });
+});
 
-gulp.task('watch',function(){
+gulp.task('nodemon', function(cb){
+  var stream = nodemon({
+    script: SERVER_NAME,
+    watch: [SERVER_NAME, SERVER_ROOT],
+  })
+    .on('start', function(){
+      console.log('SERVER STARTING');
+      cb();
+    })
+    .on('restart', function(){
+      console.log('SERVER RESTARTING');
+    })
+    .on('crash', function(){
+      console.log('SERVER CRASH');
+      stream.emit('restart',10);
+    })
+});
+
+
+gulp.task('default', ['styles', 'scripts', 'browser-sync'], function(){
   gulp.watch(SCSS_DIR, ['styles']);
   gulp.watch(JS_DIR + '**/*.js',['scripts']);
+  gulp.watch(VIEWS_DIR + '*').on("change", browserSync.reload);
+});
+
+gulp.task('reload',function(){
+  browserSync.reload();
 });
 
 gulp.task('styles',function(){
@@ -100,7 +140,5 @@ gulp.task('scripts',function(){
 
    merge(tasks, root);
   }
-
+  browserSync.reload();
 });
-
-gulp.task('default', ['styles', 'scripts']);
