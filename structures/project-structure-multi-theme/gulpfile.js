@@ -11,6 +11,7 @@ var browserSync = require('browser-sync').create();
 var nodemon = require('gulp-nodemon');
 var readline = require('readline');
 var config = require('./configs/config-build');
+var glob = require('glob');
 
 var nodemon_instance = undefined;
 /*==============================================================================
@@ -110,54 +111,78 @@ var startWatch = function(){
   gulp.watch(config.paths.resources_views + '**').on("change", browserSync.reload);
 };
 
-var pathExists = function(path){
-  return fs.existsSync(path);
+var checkPathExistence = function(path, callback){
+  var pathExists = false;
+  glob(path, function(err,files){
+    if(err | !files){
+      pathExists = false;
+    }
+    else if(files.length > 0){
+      pathExists = true;
+    }
+    callback(pathExists);
+  });
 };
 
-var compileJS = function(src, dest){
-  var options = getBuildOptions();
-  var finishedCount = 0;
-  config.file_names.loading_order_files.map(function(currentFile){
-    var loaderFile = src + currentFile.input;
-    var error = false;
-    if(!pathExists(loaderFile)){
+var checkLoaderFile = function(loaderObject, src, dest){
+  var loaderFile = src + loaderObject.input;
+  checkPathExistence(loaderFile, function(pathExists){
+    if(!pathExists){
       console.warn("-------------------");
       console.warn("Loader file doesn't exist for JS files, skipping");
       console.warn("\tLoader File: " + loaderFile);
       console.warn("-------------------");
     }
-    else {
-      var orderedJS = [];
-      const reader = readline.createInterface({
-        input: fs.createReadStream(loaderFile)
-      });
-      reader.on('line', function(line){
-        var currentJS = src + line;
-        if(pathExists(currentJS)){
-          orderedJS.push(currentJS);
-        }
-        else{
-          console.error("-------------------");
-          console.error("File to be loaded doesn't exist, skipping build");
-          console.error("\tLoader File: " + loaderFile);
-          console.error("\tFile: " + currentJS);
-          console.error("-------------------");
-          error = true;
-          reader.close();
-        }
-      });
-      reader.on('close', function(event){
-        if(!error){
-          return gulp.src(orderedJS)
-            .pipe(concat(currentFile.output))
-            .pipe(gulpif(options.isDevelopment, beautify(), uglify()))
-            .pipe(gulp.dest(dest))
-            .pipe(browserSync.stream())
-        }
-      });
+    else{
+      readLoaderFile(loaderFile, loaderObject, src, dest);
     }
   });
 };
+
+var readLoaderFile = function(loaderFile, loaderObject, src, dest){
+  var orderedJS = [];
+  var error = false;
+  const reader = readline.createInterface({
+    input: fs.createReadStream(loaderFile)
+  });
+  reader.on('line', function(line){
+    var currentJS = src + line;
+    checkPathExistence(currentJS, function(exists){
+      if(exists){
+        orderedJS.push(currentJS);
+      }
+      else{
+        console.error("-------------------");
+        console.error("File to be loaded doesn't exist");
+        console.error("\tLoader File: " + loaderFile);
+        console.error("\tFile: " + currentJS);
+        console.error("-------------------");
+        error = true;
+        reader.close();
+      }
+    });
+  });
+  reader.on('close',function(){
+    if(error){
+      console.error("***********************Skipping build***********************");
+    }
+    else{
+      var options = getBuildOptions();
+      return gulp.src(orderedJS)
+        .pipe(concat(loaderObject.output))
+        .pipe(gulpif(options.isDevelopment, beautify(), uglify()))
+        .pipe(gulp.dest(dest))
+        .pipe(browserSync.stream())
+    }
+  });
+};
+
+var compileJS = function(src, dest){
+  config.file_names.loading_order_files.map(function(loaderObject){
+    checkLoaderFile(loaderObject, src, dest);
+  });
+};
+
 
 var compileSASS = function(src, dest){
   var options = getBuildOptions();
