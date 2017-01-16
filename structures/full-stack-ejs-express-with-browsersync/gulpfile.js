@@ -12,7 +12,8 @@ var nodemon = require('gulp-nodemon');
 var readline = require('readline');
 var glob = require('glob');
 
-var config = require('./configs/config-build');
+var config_build = require('./configs/config-build')('./');
+var config_server = require('./configs/config-server')('./');
 
 /*==============================================================================
 COMMON RUN TASKS
@@ -43,25 +44,24 @@ gulp.task('help', function(){
 HELPER TASKS
 ==============================================================================*/
 gulp.task('vendorJS', function(){
-  compileJS(config.paths.vendor_src_js, config.paths.vendor_dist_js)
+  compileJS(config_build.paths.vendor_src_js, config_build.paths.vendor_dist_js)
 });
 
 gulp.task('vendorSASS', function(){
-  compileSASS(config.paths.vendor_src_sass, config.paths.vendor_dist_css)
+  compileSASS(config_build.paths.vendor_src_sass, config_build.paths.vendor_dist_css)
 });
 
 gulp.task('resourcesJS', function(){
-  compileJS(config.paths.resources_src_js, config.paths.resources_dist_js);
+  compileJS(config_build.paths.resources_src_js, config_build.paths.resources_dist_js);
 });
 
 gulp.task('resourcesSASS', function(){
-  compileSASS(config.paths.resources_src_sass, config.paths.resources_dist_css);
+  compileSASS(config_build.paths.resources_src_sass, config_build.paths.resources_dist_css);
 });
 
 gulp.task('browser-sync', ['nodemon'], function(){
   browserSync.init({
-    proxy: config.server.host + ':' + config.server.port,
-    files: config.paths.public_files,
+    proxy: config_server.server.host + ':' + config_server.server.port,
   });
   browserSync.reload();
 });
@@ -69,8 +69,8 @@ gulp.task('browser-sync', ['nodemon'], function(){
 gulp.task('nodemon', function(cb){
   var started = false;
   var stream = nodemon({
-    script: config.paths.server_path,
-    watch: config.paths.server_root,
+    script: config_build.paths.server_path,
+    watch: config_build.paths.server_root,
   })
     .on('start', function(){
       if(!started){
@@ -92,11 +92,11 @@ in its own.  Need to be careful about the patterns matching on to watch for chan
 to limit the builds.
 ------------------------------------------------------------------------------*/
 var startWatch = function(){
-  gulp.watch(config.paths.vendor_src_js + '**', ['vendorJS']);
-  gulp.watch(config.paths.vendor_src_sass + '**', ['vendorSASS']);
-  gulp.watch(config.paths.resources_src_js + '**', ['resourcesJS']);
-  gulp.watch(config.paths.resources_src_sass + '**', ['resourcesSASS']);
-  gulp.watch(config.paths.resources_views + '**').on("change", browserSync.reload);
+  gulp.watch(config_build.paths.vendor_src_js + '**', ['vendorJS']);
+  gulp.watch(config_build.paths.vendor_src_sass + '**', ['vendorSASS']);
+  gulp.watch(config_build.paths.resources_src_js + '**', ['resourcesJS']);
+  gulp.watch(config_build.paths.resources_src_sass + '**', ['resourcesSASS']);
+  gulp.watch(config_build.paths.resources_views + '**').on("change", browserSync.reload);
 };
 
 /*------------------------------------------------------------------------------
@@ -117,11 +117,11 @@ var getBuildOptions = function(){
   var options = {
     isDevelopment: devStatus,
     prefixer: {
-      browsers: config.project_build.supported_versions,
+      browsers: config_build.project_build.supported_versions,
     },
     sassOptions: {
       outputStyle: style,
-      includePaths: config.paths.search_paths,
+      includePaths: config_build.paths.search_paths,
     },
   };
   return options;
@@ -213,7 +213,7 @@ file listed into one into a single file.  This function starts the process, by
 calling a function to check every loader file that is in the config.
 ------------------------------------------------------------------------------*/
 var compileJS = function(src, dest){
-  config.file_names.loading_order_files.map(function(loaderObject){
+  config_build.file_names.loading_order_files.map(function(loaderObject){
     checkLoaderFile(loaderObject, src, dest);
   });
 };

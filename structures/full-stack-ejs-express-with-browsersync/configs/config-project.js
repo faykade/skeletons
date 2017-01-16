@@ -1,9 +1,5 @@
 const config_project = {
-  server: {
-    host: 'localhost',
-    port: '5000',
-  },
-  project: {
+  visual: {
     theme: 'blue-theme',
   },
 };
